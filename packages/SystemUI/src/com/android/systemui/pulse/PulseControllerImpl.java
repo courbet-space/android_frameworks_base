@@ -102,7 +102,9 @@ public class PulseControllerImpl implements
     private boolean mNavPulseEnabled;
     private boolean mLsPulseEnabled;
     private boolean mAmbPulseEnabled;
+    private boolean mQsPulseEnabled;
     private boolean mKeyguardShowing;
+    private boolean mQSShowing;
     private boolean mDozing;
     private boolean mKeyguardGoingAway;
 
@@ -182,13 +184,17 @@ public class PulseControllerImpl implements
             mContext.getContentResolver().registerContentObserver(
                     Settings.Secure.getUriFor(Settings.Secure.PULSE_RENDER_STYLE), false, this,
                     UserHandle.USER_ALL);
+            mContext.getContentResolver().registerContentObserver(
+                    Settings.Secure.getUriFor(Settings.Secure.QS_PULSE_ENABLED), false, this,
+                    UserHandle.USER_ALL);
         }
 
         @Override
         public void onChange(boolean selfChange, Uri uri) {
             if (uri.equals(Settings.Secure.getUriFor(Settings.Secure.NAVBAR_PULSE_ENABLED))
                     || uri.equals(Settings.Secure.getUriFor(Settings.Secure.LOCKSCREEN_PULSE_ENABLED))
-                    || uri.equals(Settings.Secure.getUriFor(Settings.Secure.AMBIENT_PULSE_ENABLED))) {
+                    || uri.equals(Settings.Secure.getUriFor(Settings.Secure.AMBIENT_PULSE_ENABLED))
+                    || uri.equals(Settings.System.getUriFor(Settings.Secure.QS_PULSE_ENABLED))) {
                 updateEnabled();
                 updatePulseVisibility();
             } else if (uri.equals(Settings.Secure.getUriFor(Settings.Secure.PULSE_RENDER_STYLE))) {
@@ -209,6 +215,8 @@ public class PulseControllerImpl implements
                     Settings.Secure.LOCKSCREEN_PULSE_ENABLED, 0, UserHandle.USER_CURRENT) == 1;
             mAmbPulseEnabled = Settings.Secure.getIntForUser(mContext.getContentResolver(),
                     Settings.Secure.AMBIENT_PULSE_ENABLED, 0, UserHandle.USER_CURRENT) == 1;
+            mQsPulseEnabled = Settings.Secure.getIntForUser(mContext.getContentResolver(),
+                    Settings.Secure.QS_PULSE_ENABLED, 0, UserHandle.USER_CURRENT) == 1;
         }
 
         void updateRenderMode() {
@@ -235,6 +243,8 @@ public class PulseControllerImpl implements
                 && mAmbPulseEnabled && mKeyguardShowing && mDozing;
         boolean allowLsPulse = vv != null && vv.isAttached()
                 && mLsPulseEnabled && mKeyguardShowing && !mDozing;
+        boolean allowQsPulse = vv != null && vv.isAttached()
+                && mQsPulseEnabled && mQSShowing && !mDozing;
         boolean allowNavPulse = nv!= null && nv.isAttached()
             && mNavPulseEnabled && !mKeyguardShowing;
 
@@ -246,7 +256,7 @@ public class PulseControllerImpl implements
             return;
         }
         if (!allowNavPulse && mNavPulseAttached) {
-            detachPulseFrom(nv, allowLsPulse || allowAmbPulse/*keep linked*/);
+            detachPulseFrom(nv, allowLsPulse || allowAmbPulse || allowQsPulse/*keep linked*/);
             mNavPulseAttached = false;
         }
         if (!allowLsPulse && !allowAmbPulse && mLsPulseAttached) {
@@ -254,12 +264,22 @@ public class PulseControllerImpl implements
             mLsPulseAttached = false;
         }
 
-        if ((allowLsPulse || allowAmbPulse) && !mLsPulseAttached) {
+        if ((allowLsPulse || allowAmbPulse || allowQsPulse) && !mLsPulseAttached) {
             attachPulseTo(vv);
             mLsPulseAttached = true;
         } else if (allowNavPulse && !mNavPulseAttached) {
             attachPulseTo(nv);
             mNavPulseAttached = true;
+        }
+    }
+
+    public void setQSShowing(boolean showing) {
+        if (showing != mQSShowing) {
+            mQSShowing = showing;
+            if (mRenderer != null) {
+                mRenderer.setKeyguardShowing(showing);
+            }
+            updatePulseVisibility();
         }
     }
 

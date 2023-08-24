@@ -11959,6 +11959,12 @@ public final class Settings {
         public static final String PULSE_VERTICAL_MIRROR = "pulse_vertical_mirror";
 
         /**
+         * Pulse quick settings music visualizer
+         * @hide
+         */
+        public static final String QS_PULSE_ENABLED = "qs_pulse_enabled";
+
+        /**
          * Keys we no longer back up under the current schema, but want to continue to
          * process when restoring historical backup datasets.
          *

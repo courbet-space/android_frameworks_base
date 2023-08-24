@@ -2560,7 +2560,7 @@ public final class NotificationPanelViewController implements Dumpable {
         }
     }
 
-    private void updateNotificationTranslucency() {
+    public void updateNotificationTranslucency() {
         if (mIsOcclusionTransitionRunning) {
             return;
         }
@@ -2575,8 +2575,11 @@ public final class NotificationPanelViewController implements Dumpable {
         }
         float finalAlpha = alpha > 0.84f ? alpha : 0f;
         mNotificationStackScrollLayoutController.setAlpha(finalAlpha);
-        if (mBarState != StatusBarState.KEYGUARD && !isFullyCollapsed() && !isPanelVisibleBecauseOfHeadsUp()) {
-            mCentralSurfaces.updateDismissAllVisibility(true);
+        if (mCentralSurfaces != null) {
+            if (mBarState != StatusBarState.KEYGUARD && !isFullyCollapsed() && !isPanelVisibleBecauseOfHeadsUp()) {
+                mCentralSurfaces.updateDismissAllVisibility(true);
+            }
+            mCentralSurfaces.setQSShowing(mBarState != StatusBarState.KEYGUARD && !isFullyCollapsed());
         }
     }
 

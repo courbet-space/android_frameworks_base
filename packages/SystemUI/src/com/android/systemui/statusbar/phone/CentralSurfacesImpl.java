@@ -1627,6 +1627,13 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces, Tune
         return mDismissAllButton;
     }
 
+    @Override
+    public void setQSShowing(boolean showing) {
+        if (mPulseController != null) {
+            mPulseController.setQSShowing(showing);
+        }
+    }
+    
     protected QS createDefaultQSFragment() {
         return mFragmentService
                 .getFragmentHostManager(mNotificationShadeWindowView)
@@ -3093,6 +3100,9 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces, Tune
         }
         updatePanelExpansionForKeyguard();
         Trace.endSection();
+        if (mNotificationPanelViewController != null) {
+            mNotificationPanelViewController.updateNotificationTranslucency();
+        }
     }
 
     private void updatePanelExpansionForKeyguard() {
